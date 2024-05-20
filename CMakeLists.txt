@@ -7,4 +7,6 @@ include_directories(./EasyX/include)
 link_directories(./EasyX/lib64)
 link_libraries(libeasyx.a)
 
+
 add_executable(C_Game main.cpp)
+target_link_libraries(C_Game msimg32) # 或者 gdi32，取决于你的函数在哪个库中
