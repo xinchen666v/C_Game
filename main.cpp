@@ -10,7 +10,7 @@ int main() {
     ExMessage msg;
     IMAGE img_background;
 
-    loadimage(&img_background,_T("img/background.png"));
+    loadimage(&img_background,_T("../img/background.png"));
 
     BeginBatchDraw();
 
