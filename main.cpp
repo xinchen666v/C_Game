@@ -1,12 +1,18 @@
 #include <graphics.h>
 #include <string>
 #include <iostream>
+#include <vector>
 
 int idx_current_anim = 0; //用于记录当前动画的索引
 
 const int PLAYER_ANIM_NUM = 6; //玩家动画的数量
 
-const int PLAYER_SPEED = 5; //player移动速度
+const int PLAYER_WIDTH = 80; //玩家宽度
+const int PLAYER_HEIGHT = 80; //玩家高度
+
+const int PLAYER_SHADOW_WIDTH = 32; //玩家阴影宽度
+
+const int PLAYER_SPEED = 3; //player移动速度
 
 bool is_move_up = false;
 bool is_move_down = false;
@@ -15,6 +21,8 @@ bool is_move_right = false;
 
 IMAGE img_player_left[PLAYER_ANIM_NUM];
 IMAGE img_player_right[PLAYER_ANIM_NUM];
+IMAGE img_shadow;
+IMAGE img_background;
 
 POINT player_pos = { 500,500 }; //玩家初始位置
 
@@ -43,16 +51,83 @@ void LoadAnimation()
     }
 }
 
+//构造类渲染player动画
+class Animation
+{
+public:
+    Animation(LPCTSTR path,int num,int interval)
+    {
+        interval_ms = interval;
+
+        TCHAR path_file[256];
+        for(size_t i = 0;i < num;i++)
+        {
+            _stprintf_s(path_file,path,i);
+
+            IMAGE* frame = new IMAGE();
+            loadimage(frame,path_file);
+            frame_list.push_back(frame);
+        }
+    }
+
+    ~Animation()
+    {
+        for(size_t i = 0;i<frame_list.size();i++)
+            delete frame_list[i];
+    }
+
+    void Play(int x,int y,int delta)
+    {
+        timer += delta;
+        if (timer >= interval_ms)
+        {
+            idx_frame = (idx_frame + 1) % frame_list.size();
+            timer = 0;
+        }
+        putimage_alpha(x,y,frame_list[idx_frame]);
+    }
+
+private:
+    int timer = 0; //用于记录动画播放时间
+    int idx_frame = 0; //用于记录当前播放的帧
+    int interval_ms; //动画播放间隔
+    std::vector<IMAGE*> frame_list; //存放动画帧的数组
+};
+
+//用于渲染player动画的类实例
+Animation anim_player_left(_T("../img/player_left_%d.png"),PLAYER_ANIM_NUM,45);
+Animation anim_player_right(_T("../img/player_right_%d.png"),PLAYER_ANIM_NUM,45);
+
+void DrawPlayer(int delta,int dir_x)
+{
+    int pos_shadow_x = player_pos.x + (PLAYER_WIDTH / 2 - PLAYER_SHADOW_WIDTH / 2);
+    int pos_shadow_y = player_pos.y + PLAYER_HEIGHT - 8;
+    putimage_alpha(pos_shadow_x,pos_shadow_y,&img_shadow);
+
+    static bool facing_left = false;
+    if (dir_x < 0)
+        facing_left = true;
+    else if (dir_x > 0)
+        facing_left = false;
+
+    if (facing_left)
+        anim_player_left.Play(player_pos.x,player_pos.y,delta);
+    else
+        anim_player_right.Play(player_pos.x,player_pos.y,delta);
+}
+
 int main() {
     initgraph(1280,720);
 
     bool running = true;
 
     ExMessage msg;
-    IMAGE img_background;
+
+
 
     LoadAnimation();
     loadimage(&img_background,_T("../img/background.png"));
+    loadimage(&img_shadow,_T("../img/shadow_player.png"));
 
     BeginBatchDraw();
 
@@ -119,7 +194,8 @@ int main() {
         cleardevice();
 
         putimage(0,0,&img_background);
-        putimage_alpha(player_pos.x,player_pos.y,&img_player_right[idx_current_anim]);
+//        putimage_alpha(player_pos.x,player_pos.y,&img_player_right[idx_current_anim]);
+        DrawPlayer(1000/144,is_move_right - is_move_left);
 
         FlushBatchDraw();
 
