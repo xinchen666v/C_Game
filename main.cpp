@@ -2,8 +2,12 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <valarray>
 
 int idx_current_anim = 0; //用于记录当前动画的索引
+
+const int WINDOW_WIDTH = 1280; //窗口宽度
+const int WINDOW_HEIGHT = 720; //窗口高度
 
 const int PLAYER_ANIM_NUM = 6; //玩家动画的数量
 
@@ -117,7 +121,7 @@ void DrawPlayer(int delta,int dir_x)
 }
 
 int main() {
-    initgraph(1280,720);
+    initgraph(WINDOW_WIDTH,WINDOW_HEIGHT);
 
     bool running = true;
 
@@ -190,6 +194,27 @@ int main() {
 
         idx_current_anim = idx_current_anim % PLAYER_ANIM_NUM; //确保索引在0~5之间
 
+        //确保运算时的速度方向向量是单位向量
+        int dir_x = is_move_right - is_move_left;
+        int dir_y = is_move_down - is_move_up;
+        double len_dir = sqrt(dir_x * dir_x + dir_y * dir_y);
+        if(len_dir != 0)
+        {
+            double normalized_x = dir_x / len_dir;
+            double normalized_y = dir_y / len_dir;
+            player_pos.x += (int)(PLAYER_SPEED * normalized_x);
+            player_pos.y += (int)(PLAYER_SPEED * normalized_y);
+        }
+
+        //保证玩家在画面内
+        if(player_pos.x < 0)
+            player_pos.x = 0;
+        if(player_pos.y < 0)
+            player_pos.y = 0;
+        if(player_pos.x + PLAYER_WIDTH > WINDOW_WIDTH)
+            player_pos.x = WINDOW_WIDTH - PLAYER_WIDTH;
+        if(player_pos.y + PLAYER_HEIGHT > WINDOW_HEIGHT)
+            player_pos.y = WINDOW_HEIGHT - PLAYER_HEIGHT;
 
         cleardevice();
 
