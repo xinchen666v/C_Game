@@ -11,20 +11,15 @@ const int WINDOW_HEIGHT = 720; //窗口高度
 
 const int PLAYER_ANIM_NUM = 6; //玩家动画的数量
 
-
-
-
-
-
 IMAGE img_player_left[PLAYER_ANIM_NUM];
 IMAGE img_player_right[PLAYER_ANIM_NUM];
 
 IMAGE img_background;
 
-
-
 //实现png透明通道混叠
 #pragma comment(lib,"MSIMG32.LIB")
+//播放音乐
+#pragma comment(lib,"Winmm.lib")
 
 inline void putimage_alpha(int x, int y, IMAGE* img)
 {
@@ -384,6 +379,11 @@ void DrawPlayerScore(int score)
 int main() {
     initgraph(WINDOW_WIDTH,WINDOW_HEIGHT);
 
+    mciSendString(_T("open ../mus/bgm.mp3 alias bgm"),NULL,0,NULL);
+    mciSendString(_T("open ../mus/hit.wav alias hit"),NULL,0,NULL);
+
+    mciSendString(_T("play bgm repeat from 0"),NULL,0,NULL);
+
     bool running = true;
 
     int score = 0;
@@ -422,7 +422,7 @@ int main() {
             {
                 static TCHAR text[128];
                 _stprintf_s(text,_T("Your Score: %d."),score);
-                MessageBox(GetHWnd(),_T("Game Over!"),_T("Game Over"),MB_OK);
+                MessageBox(GetHWnd(),text,_T("Game Over!"),MB_OK);
                 running = false;
                 break;
             }
@@ -435,6 +435,7 @@ int main() {
             {
                 if(enemy->CheckBulletCollision(bullet))
                 {
+                    mciSendString(_T("play hit from 0"),NULL,0,NULL);
                     enemy->Hurt();
                     score ++;
                 }
